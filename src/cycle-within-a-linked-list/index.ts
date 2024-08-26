@@ -9,5 +9,14 @@ export class LinkedListNode {
 }
 
 export function getContainsCycle(linked_list: LinkedListNode): boolean {
-  return true;
+  const visited = new Set<LinkedListNode>();
+  let current = linked_list;
+  while (current.next) {
+    if (visited.has(current)) {
+      return true;
+    }
+    visited.add(current);
+    current = current.next;
+  }
+  return false;
 }
