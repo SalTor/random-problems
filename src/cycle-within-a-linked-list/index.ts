@@ -1,4 +1,4 @@
-class LinkedListNode {
+export class LinkedListNode {
   value: unknown;
   next: LinkedListNode | null;
 
@@ -6,4 +6,8 @@ class LinkedListNode {
     this.value = value;
     this.next = null;
   }
+}
+
+export function getContainsCycle(linked_list: LinkedListNode): boolean {
+  return true;
 }
