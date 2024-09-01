@@ -16,6 +16,6 @@ describe("Reverse words", () => {
     // ],
     // ["empty string", "", ""],
   ])("%s", (_, input, output) => {
-    expect(reverseWords(input.split(""))).toEqual(output);
+    expect(reverseWords(input)).toEqual(output);
   });
 });

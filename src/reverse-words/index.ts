@@ -1,5 +1,5 @@
-export function reverseWords(message: readonly string[]) {
-  let mirrored = reverseCharacters(message, 0, message.length - 1);
+export function reverseWords(message: string) {
+  let mirrored = reverseCharacters(message.split(""), 0, message.length - 1);
 
   let currentWordStartIndex = 0;
   for (let i = 0; i < mirrored.length; i++) {
