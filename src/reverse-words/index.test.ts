@@ -1,21 +1,25 @@
 import { reverseWords } from ".";
 
-describe("Reverse words", () => {
-  test.each([
-    ["two words", "thief cake", "cake thief"],
-    // ["three words", "one another get", "get another one"],
-    // [
-    //   "multiple words same length",
-    //   "rat the ate cat the",
-    //   "the cat ate the rat",
-    // ],
-    // [
-    //   "multiple words different length",
-    //   "yummy is cake bundt chocolate",
-    //   "chocolate bundt cake is yummy",
-    // ],
-    // ["empty string", "", ""],
-  ])("%s", (_, input, output) => {
-    expect(reverseWords(input)).toEqual(output);
+test("Empty string", () => {
+  expect(reverseWords("")).toEqual("");
+});
+
+test("One word", () => {
+  expect(reverseWords("hello")).toEqual("hello");
+});
+
+test("Two words", () => {
+  expect(reverseWords("thief cake")).toEqual("cake thief");
+});
+
+describe("Multiple words", () => {
+  test("Each of the same length", () => {
+    expect(reverseWords("rat the ate cat the")).toEqual("the cat ate the rat");
+  });
+
+  test("Of varying lengths", () => {
+    expect(reverseWords("yummy is cake bundt chocolate")).toEqual(
+      "chocolate bundt cake is yummy",
+    );
   });
 });

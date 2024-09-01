@@ -3,9 +3,11 @@ export function reverseWords(message: string) {
 
   let currentWordStartIndex = 0;
   for (let i = 0; i < mirrored.length; i++) {
-    const isEndOfWord = i === mirrored.length || mirrored[i] === " ";
+    const isSpaceChar = mirrored[i] === " "
+    const isLastIndex = i === mirrored.length - 1
+    const isEndOfWord = isSpaceChar || isLastIndex;
     if (isEndOfWord) {
-      mirrored = reverseCharacters(mirrored, currentWordStartIndex, i - 1);
+      mirrored = reverseCharacters(mirrored, currentWordStartIndex, isLastIndex ? i : i - 1);
       currentWordStartIndex = i + 1;
     }
   }
