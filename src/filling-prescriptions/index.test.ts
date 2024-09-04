@@ -1,14 +1,18 @@
-import { process } from ".";
+import { MedicineInventory } from ".";
 
 describe.only("Adding inventory", () => {
   test("Adding quantity for new medicine retains it", () => {
-    const result = process(["Add|Pepsid|100"]);
-    expect(result.thing.medicines.get("Pepsid")).toEqual(100);
+    const inventory = new MedicineInventory();
+    inventory.process(["Add|Pepsid|100"]);
+    expect(inventory.get("Pepsid")).toEqual(100);
   });
 
   test("Adding quantity for existing medicine updates it", () => {
-    const result = process(["Add|Pepsid|100", "Add|Pepsid|100"]);
-    expect(result.thing.medicines.get("Pepsid")).toEqual(200);
+    const inventory = new MedicineInventory();
+    inventory.process(["Add|Pepsid|100"]);
+    expect(inventory.get("Pepsid")).toEqual(100);
+    inventory.process(["Add|Pepsid|100"]);
+    expect(inventory.get("Pepsid")).toEqual(200);
   });
 });
 
