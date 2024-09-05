@@ -8,8 +8,14 @@ afterAll(() => {
   vi.resetAllMocks();
 });
 
+const logger = vi.fn();
+
+afterEach(() => {
+  logger.mockReset();
+});
+
 describe("Parsing instructions", () => {
-  test("Add", () => {
+  test("Add|Pepsid|100", () => {
     expect(parseInstruction("Add|Pepsid|100")).toStrictEqual({
       action: "add",
       medicine: "Pepsid",
@@ -17,7 +23,7 @@ describe("Parsing instructions", () => {
     });
   });
 
-  test("Fill", () => {
+  test("Fill|Sal|Pepsid,100,T", () => {
     expect(parseInstruction("Fill|Sal|Pepsid,100,T")).toStrictEqual({
       action: "fill",
       name: "Sal",
@@ -31,7 +37,7 @@ describe("Parsing instructions", () => {
     });
   });
 
-  test("Map", () => {
+  test("Map|Pepsid|Ativan", () => {
     expect(parseInstruction("Map|Pepsid|Ativan")).toStrictEqual({
       action: "map",
       from: "Pepsid",
@@ -40,13 +46,30 @@ describe("Parsing instructions", () => {
   });
 });
 
-const logger = vi.fn();
+describe("Pharmacy.process([...])", () => {
+  let pharmacy: Pharmacy;
+  beforeEach(() => {
+    pharmacy = new Pharmacy(logger);
+  });
 
-afterEach(() => {
-  logger.mockReset();
+  test("No commands - logs", () => {
+    pharmacy.process([]);
+
+    expect(logger).toHaveBeenCalledWith(
+      "Parsed messages and left with non valid instructions.",
+    );
+  });
+
+  test("Malformed commands - logs", () => {
+    pharmacy.process(["Adr|Fze|100"]);
+
+    expect(logger).toHaveBeenCalledWith(
+      "Parsed messages and left with non valid instructions.",
+    );
+  });
 });
 
-describe("Adding inventory", () => {
+describe("Instruction: Add", () => {
   test("Adding quantity for new medicine retains it", () => {
     const pharmacy = new Pharmacy(logger);
     pharmacy.process(["Add|Pepsid|100"]);
@@ -67,7 +90,7 @@ describe("Adding inventory", () => {
   });
 });
 
-describe("Has 100 inventory for Pepsid", () => {
+describe("Instruction: Fill", () => {
   let pharmacy: Pharmacy;
   beforeEach(() => {
     pharmacy = new Pharmacy(logger);
@@ -91,55 +114,27 @@ describe("Has 100 inventory for Pepsid", () => {
   });
 });
 
-describe("Has 100 inventory for Pepsid and 200 inventory for Ativan", () => {
+describe("Instruction: Map", () => {
   let pharmacy: Pharmacy;
   beforeEach(() => {
     pharmacy = new Pharmacy(logger);
+    pharmacy.process(["Map|Pepsid|Ativan"]);
     pharmacy.process(["Add|Pepsid|100", "Add|Ativan|200"]);
   });
 
-  describe("Define generic Pepsid for Attivan", () => {
-    beforeEach(() => {
-      pharmacy.process(["Map|Pepsid|Ativan"]);
-    });
-
-    test("Filling for 150 Pepsid and generic is not acceptable, fails", () => {
-      pharmacy.process(["Fill|Sal|Pepsid,150,F"]);
-      expect(logger).toHaveBeenNthCalledWith(
-        4,
-        "Cannot fill for Sal: Not enough units to satisfy request.",
-      );
-    });
-
-    test("Filling for 150 Pepsid and generic is acceptable, succeeds", () => {
-      pharmacy.process(["Fill|Sal|Pepsid,150,T"]);
-      expect(logger).toHaveBeenNthCalledWith(
-        4,
-        "Can Fill for Sal: 150 of Ativan.",
-      );
-    });
-  });
-});
-
-describe("Process no commands", () => {
-  let pharmacy: Pharmacy;
-  beforeEach(() => {
-    pharmacy = new Pharmacy(logger);
-  });
-
-  test("No commands", () => {
-    pharmacy.process([]);
-
-    expect(logger).toHaveBeenCalledWith(
-      "Parsed messages and left with non valid instructions.",
+  test("Filling for 150 Pepsid and generic is not acceptable, fails", () => {
+    pharmacy.process(["Fill|Sal|Pepsid,150,F"]);
+    expect(logger).toHaveBeenNthCalledWith(
+      4,
+      "Cannot fill for Sal: Not enough units to satisfy request.",
     );
   });
 
-  test("Malformed commands", () => {
-    pharmacy.process(["Adr|Fze|100"]);
-
-    expect(logger).toHaveBeenCalledWith(
-      "Parsed messages and left with non valid instructions.",
+  test("Filling for 150 Pepsid and generic is acceptable, succeeds", () => {
+    pharmacy.process(["Fill|Sal|Pepsid,150,T"]);
+    expect(logger).toHaveBeenNthCalledWith(
+      4,
+      "Can Fill for Sal: 150 of Ativan.",
     );
   });
 });
