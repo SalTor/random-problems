@@ -16,9 +16,12 @@ describe("Adding inventory", () => {
   });
 });
 
-describe("Add inventory for N X", () => {
-  const inventory = new MedicineInventory();
-  inventory.process(["Add|Pepsid|100"]);
+describe("Has 100 inventory for Pepsid", () => {
+  let inventory: MedicineInventory;
+  beforeEach(() => {
+    inventory = new MedicineInventory();
+    inventory.process(["Add|Pepsid|100"]);
+  });
 
   test("Filling for N+1 X does not work", () => {
     const result = inventory.process(["Fill|Sal|Pepsid,101"]);
@@ -31,8 +34,18 @@ describe("Add inventory for N X", () => {
   });
 });
 
-describe.skip("Define generic Y for X", () => {
-  describe("Has inventory for 100 X and 200 Y", () => {
+describe("Has 100 inventory for Pepsid and 200 inventory for Ativan", () => {
+  let inventory: MedicineInventory;
+  beforeEach(() => {
+    inventory = new MedicineInventory();
+    inventory.process(["Add|Pepsid|100"]);
+  });
+
+  describe("Define generic Pepsid for Attivan", () => {
+    beforeEach(() => {
+      inventory.process(["Map|Pepsid|Attivan"]);
+    });
+
     test("Filling for 150 X and generic is acceptable", () => {
       //
     });

@@ -98,33 +98,10 @@ function parseInstruction(instruction: string) {
       if (units.success) {
         return { medicine, units: units.data };
       }
-      return { status: "error", message: units.error.toString() };
+      return { status: "error" as const, message: units.error.toString() };
     });
     return { action: "fill" as const, name, fills };
   }
 
   return { status: "error", message: "Unsupported instruction." };
 }
-
-/**
-  process([
-      "Add|Pepsid|100",
-      "Add|Ativan|100",
-      "Fill|Galen|Pepsid,100,T|Ativan,200,T",
-      "Add|Ativan|100",
-      "Fill|Galen|Pepsid,100,T|Ativan,200,T"
-  ])
-
-  Add 100 to Pepsid, quantity now 100.
-  Add 100 to Ativan, quantity now 100.
-  Can't fill for Galen: insufficient inventory. // enough Pepsid; but not Ativan
-  Add 100 to Ativan, quantity now 200.
-  Can Fill for Galen: 100 of Pepsid. 200 of Ativan.
-*/
-/**
- * Example instructions:
- * Add|Pepsid|100
- * - Add 100 units of Pepsid to our inventory
- * Fill|Sal|Pepsid,100
- * - Fill a prescription of 100 units of Pepsid for Sal
- */
