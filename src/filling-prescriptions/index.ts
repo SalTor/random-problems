@@ -11,13 +11,17 @@ const boolSchema = z.preprocess((a) => {
   return null;
 }, z.boolean());
 
+type Logger = (...data: any[]) => void;
+
 export class Pharmacy {
   private inventory: Map<string, number>;
   private maps: Map<string, string>;
+  private logger: Logger;
 
-  constructor() {
+  constructor(logger: Logger = console.debug) {
     this.inventory = new Map();
     this.maps = new Map();
+    this.logger = logger;
   }
 
   get(medicine: string) {
@@ -30,15 +34,13 @@ export class Pharmacy {
   }
 
   process(instructions: Array<string>) {
-    const messages = [];
-
     const instr = instructions.map(parseInstruction).filter((i) => i !== null);
 
     for (const instruction of instr) {
       if (instruction.action === "add") {
         const { medicine, units } = instruction;
         this.add(medicine, units);
-        messages.push(
+        this.logger(
           `Add ${units} to ${medicine}, quantity now ${this.inventory.get(medicine)}.`,
         );
       }
@@ -57,24 +59,24 @@ export class Pharmacy {
                 if (generic) {
                   const currentGeneric = this.inventory.get(generic) || 0;
                   if (currentGeneric < units) {
-                    messages.push(
+                    this.logger(
                       `Cannot fill for ${name}: Not enough units to satisfy request.`,
                     );
                   } else {
                     this.inventory.set(generic, currentGeneric - units);
-                    messages.push(
+                    this.logger(
                       `Can Fill for ${name}: ${units} of ${generic}.`,
                     );
                   }
                 }
               } else {
-                messages.push(
+                this.logger(
                   `Cannot fill for ${name}: Not enough units to satisfy request.`,
                 );
               }
             } else {
               this.inventory.set(medicine, current - units);
-              messages.push(`Can Fill for ${name}: ${units} of ${medicine}.`);
+              this.logger(`Can Fill for ${name}: ${units} of ${medicine}.`);
             }
           }
         }
@@ -84,11 +86,9 @@ export class Pharmacy {
         const { from, to } = instruction;
         this.maps.set(from, to);
         this.maps.set(to, from);
-        messages.push(`Mapping ${from} to ${to}`);
+        this.logger(`Mapping ${from} to ${to}`);
       }
     }
-
-    return { messages };
   }
 }
 

@@ -32,65 +32,83 @@ describe("Parsing instructions", () => {
   });
 });
 
+const logger = vi.fn();
+
+afterEach(() => {
+  logger.mockReset();
+});
+
 describe("Adding inventory", () => {
   test("Adding quantity for new medicine retains it", () => {
-    const inventory = new Pharmacy();
-    const { messages } = inventory.process(["Add|Pepsid|100"]);
-    expect(messages).toStrictEqual(["Add 100 to Pepsid, quantity now 100."]);
-    expect(inventory.get("Pepsid")).toEqual(100);
+    const pharmacy = new Pharmacy(logger);
+    pharmacy.process(["Add|Pepsid|100"]);
+    expect(logger).toHaveBeenNthCalledWith(
+      1,
+      "Add 100 to Pepsid, quantity now 100.",
+    );
+    expect(pharmacy.get("Pepsid")).toEqual(100);
   });
 
   test("Adding quantity for existing medicine updates it", () => {
-    const inventory = new Pharmacy();
-    inventory.process(["Add|Pepsid|100"]);
-    expect(inventory.get("Pepsid")).toEqual(100);
-    inventory.process(["Add|Pepsid|100"]);
-    expect(inventory.get("Pepsid")).toEqual(200);
+    const pharmacy = new Pharmacy(logger);
+    pharmacy.process(["Add|Pepsid|100"]);
+    expect(pharmacy.get("Pepsid")).toEqual(100);
+
+    pharmacy.process(["Add|Pepsid|100"]);
+    expect(pharmacy.get("Pepsid")).toEqual(200);
   });
 });
 
 describe("Has 100 inventory for Pepsid", () => {
-  let inventory: Pharmacy;
+  let pharmacy: Pharmacy;
   beforeEach(() => {
-    inventory = new Pharmacy();
-    inventory.process(["Add|Pepsid|100"]);
+    pharmacy = new Pharmacy(logger);
+    pharmacy.process(["Add|Pepsid|100"]);
   });
 
   test("Filling for 100 Pepsid works", () => {
-    const result = inventory.process(["Fill|Sal|Pepsid,100,F"]);
-    expect(result.messages).toStrictEqual(["Can Fill for Sal: 100 of Pepsid."]);
+    pharmacy.process(["Fill|Sal|Pepsid,100,F"]);
+    expect(logger).toHaveBeenNthCalledWith(
+      2,
+      "Can Fill for Sal: 100 of Pepsid.",
+    );
   });
 
   test("Filling for 101 Pepsid does not work", () => {
-    const result = inventory.process(["Fill|Sal|Pepsid,101,F"]);
-    expect(result.messages).toStrictEqual([
+    pharmacy.process(["Fill|Sal|Pepsid,101,F"]);
+    expect(logger).toHaveBeenNthCalledWith(
+      2,
       "Cannot fill for Sal: Not enough units to satisfy request.",
-    ]);
+    );
   });
 });
 
 describe("Has 100 inventory for Pepsid and 200 inventory for Ativan", () => {
-  let inventory: Pharmacy;
+  let pharmacy: Pharmacy;
   beforeEach(() => {
-    inventory = new Pharmacy();
-    inventory.process(["Add|Pepsid|100", "Add|Ativan|200"]);
+    pharmacy = new Pharmacy(logger);
+    pharmacy.process(["Add|Pepsid|100", "Add|Ativan|200"]);
   });
 
   describe("Define generic Pepsid for Attivan", () => {
     beforeEach(() => {
-      inventory.process(["Map|Pepsid|Ativan"]);
+      pharmacy.process(["Map|Pepsid|Ativan"]);
     });
 
     test("Filling for 150 Pepsid and generic is not acceptable, fails", () => {
-      const result = inventory.process(["Fill|Sal|Pepsid,150,F"]);
-      expect(result.messages).toEqual([
+      pharmacy.process(["Fill|Sal|Pepsid,150,F"]);
+      expect(logger).toHaveBeenNthCalledWith(
+        4,
         "Cannot fill for Sal: Not enough units to satisfy request.",
-      ]);
+      );
     });
 
     test("Filling for 150 Pepsid and generic is acceptable, succeeds", () => {
-      const result = inventory.process(["Fill|Sal|Pepsid,150,T"]);
-      expect(result.messages).toEqual(["Can Fill for Sal: 150 of Ativan."]);
+      pharmacy.process(["Fill|Sal|Pepsid,150,T"]);
+      expect(logger).toHaveBeenNthCalledWith(
+        4,
+        "Can Fill for Sal: 150 of Ativan.",
+      );
     });
   });
 });
