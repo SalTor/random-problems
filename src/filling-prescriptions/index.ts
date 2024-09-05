@@ -31,6 +31,9 @@ export class Pharmacy {
   private add(medicine: string, units: number) {
     const current = this.inventory.get(medicine) || 0;
     this.inventory.set(medicine, current + units);
+    this.logger(
+      `Add ${units} to ${medicine}, quantity now ${this.inventory.get(medicine)}.`,
+    );
   }
 
   process(instructions: Array<string>) {
@@ -40,9 +43,6 @@ export class Pharmacy {
       if (instruction.action === "add") {
         const { medicine, units } = instruction;
         this.add(medicine, units);
-        this.logger(
-          `Add ${units} to ${medicine}, quantity now ${this.inventory.get(medicine)}.`,
-        );
       }
 
       if (instruction.action === "fill") {
@@ -83,14 +83,22 @@ export class Pharmacy {
       }
 
       if (instruction.action === "map") {
-        const { from, to } = instruction;
-        this.maps.set(from, to);
-        this.maps.set(to, from);
-        this.logger(`Mapping ${from} to ${to}`);
+        this.map(instruction);
       }
     }
   }
+
+  map(instruction: MapInstruction) {
+    const { from, to } = instruction;
+    this.maps.set(from, to);
+    this.logger(`Mapping ${from} to ${to}`);
+  }
 }
+
+type MapInstruction = Extract<
+  ReturnType<typeof parseInstruction>,
+  { action: "map" }
+>;
 
 export function parseInstruction(instruction: string) {
   const actionIndex = instruction.indexOf("|");
