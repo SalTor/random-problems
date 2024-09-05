@@ -32,7 +32,7 @@ export class Pharmacy {
   process(instructions: Array<string>) {
     const messages = [];
 
-    const instr = instructions.map(parseInstruction);
+    const instr = instructions.map(parseInstruction).filter((i) => i !== null);
 
     for (const instruction of instr) {
       if (instruction.action === "add") {
@@ -43,9 +43,7 @@ export class Pharmacy {
         const { name, fills } = instruction;
 
         for (const fill of fills) {
-          if (fill.status) {
-            messages.push(`Cannot fill for ${name}: ${fill.message}`);
-          } else if (fill.medicine) {
+          if (fill.medicine) {
             const { medicine, units, isGenericAcceptable } = fill;
             const current = this.medicines.get(medicine) || 0;
 
@@ -99,6 +97,7 @@ export function parseInstruction(instruction: string) {
     const [medicine, _units] = details.split("|");
 
     const units = unitsSchema.safeParse(_units);
+
     if (units.success) {
       return {
         action: "add" as const,
@@ -106,13 +105,17 @@ export function parseInstruction(instruction: string) {
         units: units.data,
       };
     }
-    return { status: "error", message: units.error.message };
+
+    console.error(units.error.message);
+
+    return null;
   }
 
   if (action === "Fill") {
     const nameIndex = details.indexOf("|");
     const medsIndex = details.slice(nameIndex + 1).indexOf("|");
     const [name, _fills] = details.slice(medsIndex + 1).split("|");
+
     const fills = _fills.split("|").map((fill) => {
       const [medicine, _units, _generic] = fill.split(",");
 
@@ -121,14 +124,13 @@ export function parseInstruction(instruction: string) {
       const isGenericAcceptable = boolSchema.safeParse(_generic);
 
       if (!units.success) {
-        return { status: "error" as const, message: units.error.message };
+        console.info(units.error.message);
+        return null;
       }
 
       if (!isGenericAcceptable.success) {
-        return {
-          status: "error" as const,
-          message: isGenericAcceptable.error.message,
-        };
+        console.info(isGenericAcceptable.error.message);
+        return null;
       }
 
       return {
@@ -137,7 +139,12 @@ export function parseInstruction(instruction: string) {
         isGenericAcceptable: isGenericAcceptable.data,
       };
     });
-    return { action: "fill" as const, name, fills };
+
+    return {
+      action: "fill" as const,
+      name,
+      fills: fills.filter((f) => f !== null),
+    };
   }
 
   if (action === "Map") {
