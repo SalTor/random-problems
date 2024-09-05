@@ -16,12 +16,12 @@ export class MedicineInventory {
     return this.medicines.get(medicine);
   }
 
-  add(medicine: string, units: number) {
+  private add(medicine: string, units: number) {
     const current = this.medicines.get(medicine) || 0;
     this.medicines.set(medicine, current + units);
   }
 
-  fill(medicine: string, units: number) {
+  private fill(medicine: string, units: number) {
     const current = this.medicines.get(medicine) || 0;
 
     if (current < units) {
@@ -37,7 +37,9 @@ export class MedicineInventory {
   process(instructions: Array<string>) {
     const messages = [];
 
-    for (const instruction of instructions.map(parseInstruction)) {
+    const instr = instructions.map(parseInstruction);
+
+    for (const instruction of instr) {
       if (instruction.action === "add") {
         this.add(instruction.medicine, instruction.units);
       }
@@ -45,7 +47,9 @@ export class MedicineInventory {
       if (instruction.action === "fill") {
         for (const fill of instruction.fills) {
           if (fill.status) {
-            messages.push(`Can't fill for ${instruction.name}: ${fill.status}`);
+            messages.push(
+              `Can't fill for ${instruction.name}: ${fill.message}`,
+            );
             continue;
           }
 
@@ -84,10 +88,12 @@ function parseInstruction(instruction: string) {
     return { status: "error", message: units.error.toString() };
   }
 
-  if (action === "fill") {
-    const [name, _fills] = details.split("|");
+  if (action === "Fill") {
+    const nameIndex = details.indexOf("|");
+    const medsIndex = details.slice(nameIndex + 1).indexOf("|");
+    const [name, _fills] = details.slice(medsIndex + 1).split("|");
     const fills = _fills.split("|").map((fill) => {
-      const [medicine, _units] = fill.split("|");
+      const [medicine, _units] = fill.split(",");
       const units = unitsSchema.safeParse(_units);
       if (units.success) {
         return { medicine, units: units.data };

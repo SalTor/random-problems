@@ -1,6 +1,6 @@
 import { MedicineInventory } from ".";
 
-describe.only("Adding inventory", () => {
+describe("Adding inventory", () => {
   test("Adding quantity for new medicine retains it", () => {
     const inventory = new MedicineInventory();
     inventory.process(["Add|Pepsid|100"]);
@@ -17,16 +17,21 @@ describe.only("Adding inventory", () => {
 });
 
 describe("Add inventory for N X", () => {
-  test("Filling for N X works", () => {
-    //
-  });
+  const inventory = new MedicineInventory();
+  inventory.process(["Add|Pepsid|100"]);
 
   test("Filling for N+1 X does not work", () => {
-    //
+    const result = inventory.process(["Fill|Sal|Pepsid,101"]);
+    expect(result.messages).toHaveLength(1);
+  });
+
+  test("Filling for N X works", () => {
+    const result = inventory.process(["Fill|Sal|Pepsid,100"]);
+    expect(result.messages).toHaveLength(0);
   });
 });
 
-describe("Define generic Y for X", () => {
+describe.skip("Define generic Y for X", () => {
   describe("Has inventory for 100 X and 200 Y", () => {
     test("Filling for 150 X and generic is acceptable", () => {
       //
