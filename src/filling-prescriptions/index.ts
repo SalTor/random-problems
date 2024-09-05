@@ -28,7 +28,8 @@ export class Pharmacy {
     return this.inventory.get(medicine);
   }
 
-  private add(medicine: string, units: number) {
+  private add(instruction: AddInstruction) {
+    const { medicine, units } = instruction;
     const current = this.inventory.get(medicine) || 0;
     this.inventory.set(medicine, current + units);
     this.logger(
@@ -36,13 +37,18 @@ export class Pharmacy {
     );
   }
 
+  private map(instruction: MapInstruction) {
+    const { from, to } = instruction;
+    this.maps.set(from, to);
+    this.logger(`Mapping ${from} to ${to}`);
+  }
+
   process(instructions: Array<string>) {
     const instr = instructions.map(parseInstruction).filter((i) => i !== null);
 
     for (const instruction of instr) {
       if (instruction.action === "add") {
-        const { medicine, units } = instruction;
-        this.add(medicine, units);
+        this.add(instruction);
       }
 
       if (instruction.action === "fill") {
@@ -87,20 +93,33 @@ export class Pharmacy {
       }
     }
   }
-
-  map(instruction: MapInstruction) {
-    const { from, to } = instruction;
-    this.maps.set(from, to);
-    this.logger(`Mapping ${from} to ${to}`);
-  }
 }
 
-type MapInstruction = Extract<
-  ReturnType<typeof parseInstruction>,
-  { action: "map" }
->;
+type AddInstruction = {
+  action: "add";
+  medicine: string;
+  units: number;
+};
 
-export function parseInstruction(instruction: string) {
+type FillInstruction = {
+  action: "fill";
+  name: string;
+  fills: Array<{
+    medicine: string;
+    units: number;
+    isGenericAcceptable: boolean;
+  }>;
+};
+
+type MapInstruction = {
+  action: "map";
+  from: string;
+  to: string;
+};
+
+type Instructions = AddInstruction | FillInstruction | MapInstruction;
+
+export function parseInstruction(instruction: string): null | Instructions {
   const actionIndex = instruction.indexOf("|");
   const action = instruction.slice(0, actionIndex);
   const details = instruction.slice(actionIndex + 1);
@@ -112,10 +131,10 @@ export function parseInstruction(instruction: string) {
 
     if (units.success) {
       return {
-        action: "add" as const,
+        action: "add",
         medicine,
         units: units.data,
-      };
+      } satisfies AddInstruction;
     }
 
     console.error(units.error.message);
@@ -153,20 +172,21 @@ export function parseInstruction(instruction: string) {
     });
 
     return {
-      action: "fill" as const,
+      action: "fill",
       name,
       fills: fills.filter((f) => f !== null),
-    };
+    } satisfies FillInstruction;
   }
 
   if (action === "Map") {
     const [med1, med2] = details.split("|");
     return {
-      action: "map" as const,
+      action: "map",
       from: med1,
       to: med2,
-    };
+    } satisfies MapInstruction;
   }
 
-  return { status: "error", message: "Unsupported instruction." };
+  console.error("Unsupported instruction.", { instruction });
+  return null;
 }
