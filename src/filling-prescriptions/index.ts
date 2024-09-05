@@ -36,7 +36,11 @@ export class Pharmacy {
 
     for (const instruction of instr) {
       if (instruction.action === "add") {
-        this.add(instruction.medicine, instruction.units);
+        const { medicine, units } = instruction;
+        this.add(medicine, units);
+        messages.push(
+          `Add ${units} to ${medicine}, quantity now ${this.medicines.get(medicine)}.`,
+        );
       }
 
       if (instruction.action === "fill") {

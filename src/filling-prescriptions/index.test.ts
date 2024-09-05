@@ -35,7 +35,8 @@ describe("Parsing instructions", () => {
 describe("Adding inventory", () => {
   test("Adding quantity for new medicine retains it", () => {
     const inventory = new Pharmacy();
-    inventory.process(["Add|Pepsid|100"]);
+    const { messages } = inventory.process(["Add|Pepsid|100"]);
+    expect(messages).toStrictEqual(["Add 100 to Pepsid, quantity now 100."]);
     expect(inventory.get("Pepsid")).toEqual(100);
   });
 
@@ -55,16 +56,16 @@ describe("Has 100 inventory for Pepsid", () => {
     inventory.process(["Add|Pepsid|100"]);
   });
 
-  test("Filling for N+1 X does not work", () => {
+  test("Filling for 100 Pepsid works", () => {
+    const result = inventory.process(["Fill|Sal|Pepsid,100,F"]);
+    expect(result.messages).toStrictEqual(["Can Fill for Sal: 100 of Pepsid."]);
+  });
+
+  test("Filling for 101 Pepsid does not work", () => {
     const result = inventory.process(["Fill|Sal|Pepsid,101,F"]);
     expect(result.messages).toStrictEqual([
       "Cannot fill for Sal: Not enough units to satisfy request.",
     ]);
-  });
-
-  test("Filling for N X works", () => {
-    const result = inventory.process(["Fill|Sal|Pepsid,100,F"]);
-    expect(result.messages).toStrictEqual(["Can Fill for Sal: 100 of Pepsid."]);
   });
 });
 
