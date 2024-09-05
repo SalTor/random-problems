@@ -1,5 +1,13 @@
 import { Pharmacy, parseInstruction } from ".";
 
+beforeAll(() => {
+  vi.spyOn(console, "error").mockImplementation(vi.fn());
+});
+
+afterAll(() => {
+  vi.resetAllMocks();
+});
+
 describe("Parsing instructions", () => {
   test("Add", () => {
     expect(parseInstruction("Add|Pepsid|100")).toStrictEqual({
@@ -110,5 +118,28 @@ describe("Has 100 inventory for Pepsid and 200 inventory for Ativan", () => {
         "Can Fill for Sal: 150 of Ativan.",
       );
     });
+  });
+});
+
+describe("Process no commands", () => {
+  let pharmacy: Pharmacy;
+  beforeEach(() => {
+    pharmacy = new Pharmacy(logger);
+  });
+
+  test("No commands", () => {
+    pharmacy.process([]);
+
+    expect(logger).toHaveBeenCalledWith(
+      "Parsed messages and left with non valid instructions.",
+    );
+  });
+
+  test("Malformed commands", () => {
+    pharmacy.process(["Adr|Fze|100"]);
+
+    expect(logger).toHaveBeenCalledWith(
+      "Parsed messages and left with non valid instructions.",
+    );
   });
 });

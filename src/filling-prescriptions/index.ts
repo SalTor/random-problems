@@ -24,6 +24,20 @@ export class Pharmacy {
     this.logger = logger;
   }
 
+  process(instructions: Array<string>) {
+    const instr = instructions.map(parseInstruction).filter((i) => i !== null);
+
+    if (instr.length === 0) {
+      this.logger("Parsed messages and left with non valid instructions.");
+    }
+
+    for (const instruction of instr) {
+      if (instruction.action === "add") this.add(instruction);
+      if (instruction.action === "map") this.map(instruction);
+      if (instruction.action === "fill") this.fill(instruction);
+    }
+  }
+
   get(medicine: string) {
     return this.inventory.get(medicine);
   }
@@ -43,53 +57,35 @@ export class Pharmacy {
     this.logger(`Mapping ${from} to ${to}`);
   }
 
-  process(instructions: Array<string>) {
-    const instr = instructions.map(parseInstruction).filter((i) => i !== null);
+  private fill(instruction: FillInstruction) {
+    const { name, fills } = instruction;
 
-    for (const instruction of instr) {
-      if (instruction.action === "add") {
-        this.add(instruction);
-      }
+    for (const fill of fills) {
+      const { medicine, units, isGenericAcceptable } = fill;
+      const current = this.inventory.get(medicine) || 0;
 
-      if (instruction.action === "fill") {
-        const { name, fills } = instruction;
-
-        for (const fill of fills) {
-          if (fill.medicine) {
-            const { medicine, units, isGenericAcceptable } = fill;
-            const current = this.inventory.get(medicine) || 0;
-
-            if (current < units) {
-              if (isGenericAcceptable) {
-                const generic = this.maps.get(medicine);
-                if (generic) {
-                  const currentGeneric = this.inventory.get(generic) || 0;
-                  if (currentGeneric < units) {
-                    this.logger(
-                      `Cannot fill for ${name}: Not enough units to satisfy request.`,
-                    );
-                  } else {
-                    this.inventory.set(generic, currentGeneric - units);
-                    this.logger(
-                      `Can Fill for ${name}: ${units} of ${generic}.`,
-                    );
-                  }
-                }
-              } else {
-                this.logger(
-                  `Cannot fill for ${name}: Not enough units to satisfy request.`,
-                );
-              }
+      if (current < units) {
+        if (isGenericAcceptable) {
+          const generic = this.maps.get(medicine);
+          if (generic) {
+            const currentGeneric = this.inventory.get(generic) || 0;
+            if (currentGeneric < units) {
+              this.logger(
+                `Cannot fill for ${name}: Not enough units to satisfy request.`,
+              );
             } else {
-              this.inventory.set(medicine, current - units);
-              this.logger(`Can Fill for ${name}: ${units} of ${medicine}.`);
+              this.inventory.set(generic, currentGeneric - units);
+              this.logger(`Can Fill for ${name}: ${units} of ${generic}.`);
             }
           }
+        } else {
+          this.logger(
+            `Cannot fill for ${name}: Not enough units to satisfy request.`,
+          );
         }
-      }
-
-      if (instruction.action === "map") {
-        this.map(instruction);
+      } else {
+        this.inventory.set(medicine, current - units);
+        this.logger(`Can Fill for ${name}: ${units} of ${medicine}.`);
       }
     }
   }
