@@ -72,7 +72,9 @@ describe("Pharmacy.process([...])", () => {
 describe("Instruction: Add", () => {
   test("Adding quantity for new medicine retains it", () => {
     const pharmacy = new Pharmacy(logger);
+
     pharmacy.process(["Add|Pepsid|100"]);
+
     expect(logger).toHaveBeenNthCalledWith(
       1,
       "Add 100 to Pepsid, quantity now 100.",
@@ -83,9 +85,11 @@ describe("Instruction: Add", () => {
   test("Adding quantity for existing medicine updates it", () => {
     const pharmacy = new Pharmacy(logger);
     pharmacy.process(["Add|Pepsid|100"]);
+
     expect(pharmacy.get("Pepsid")).toEqual(100);
 
     pharmacy.process(["Add|Pepsid|100"]);
+
     expect(pharmacy.get("Pepsid")).toEqual(200);
   });
 });
@@ -99,18 +103,35 @@ describe("Instruction: Fill", () => {
 
   test("Filling for 100 Pepsid works", () => {
     pharmacy.process(["Fill|Sal|Pepsid,100,F"]);
+
     expect(logger).toHaveBeenNthCalledWith(
       2,
       "Can Fill for Sal: 100 of Pepsid.",
     );
+    expect(pharmacy.get("Pepsid")).toBe(0);
   });
 
   test("Filling for 101 Pepsid does not work", () => {
     pharmacy.process(["Fill|Sal|Pepsid,101,F"]);
+
     expect(logger).toHaveBeenNthCalledWith(
       2,
       "Cannot fill for Sal: Not enough units to satisfy request.",
     );
+  });
+
+  test("A bad fill followed by a good fill, the good fill works", () => {
+    pharmacy.process(["Fill|Sal|Pepsid,101,F", "Fill|Winnie|Pepsid,100,F"]);
+
+    expect(logger).toHaveBeenNthCalledWith(
+      2,
+      "Cannot fill for Sal: Not enough units to satisfy request.",
+    );
+    expect(logger).toHaveBeenNthCalledWith(
+      3,
+      "Can Fill for Winnie: 100 of Pepsid.",
+    );
+    expect(pharmacy.get("Pepsid")).toBe(0);
   });
 });
 
