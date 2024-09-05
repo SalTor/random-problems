@@ -1,4 +1,4 @@
-import { MedicineInventory, parseInstruction } from ".";
+import { Pharmacy, parseInstruction } from ".";
 
 describe("Parsing instructions", () => {
   test("Add", () => {
@@ -34,13 +34,13 @@ describe("Parsing instructions", () => {
 
 describe("Adding inventory", () => {
   test("Adding quantity for new medicine retains it", () => {
-    const inventory = new MedicineInventory();
+    const inventory = new Pharmacy();
     inventory.process(["Add|Pepsid|100"]);
     expect(inventory.get("Pepsid")).toEqual(100);
   });
 
   test("Adding quantity for existing medicine updates it", () => {
-    const inventory = new MedicineInventory();
+    const inventory = new Pharmacy();
     inventory.process(["Add|Pepsid|100"]);
     expect(inventory.get("Pepsid")).toEqual(100);
     inventory.process(["Add|Pepsid|100"]);
@@ -49,9 +49,9 @@ describe("Adding inventory", () => {
 });
 
 describe("Has 100 inventory for Pepsid", () => {
-  let inventory: MedicineInventory;
+  let inventory: Pharmacy;
   beforeEach(() => {
-    inventory = new MedicineInventory();
+    inventory = new Pharmacy();
     inventory.process(["Add|Pepsid|100"]);
   });
 
@@ -69,9 +69,9 @@ describe("Has 100 inventory for Pepsid", () => {
 });
 
 describe("Has 100 inventory for Pepsid and 200 inventory for Ativan", () => {
-  let inventory: MedicineInventory;
+  let inventory: Pharmacy;
   beforeEach(() => {
-    inventory = new MedicineInventory();
+    inventory = new Pharmacy();
     inventory.process(["Add|Pepsid|100", "Add|Ativan|200"]);
   });
 

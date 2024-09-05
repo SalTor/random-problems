@@ -11,7 +11,7 @@ const boolSchema = z.preprocess((a) => {
   return null;
 }, z.boolean());
 
-export class MedicineInventory {
+export class Pharmacy {
   private medicines: Map<string, number>;
   private maps: Map<string, string>;
 
