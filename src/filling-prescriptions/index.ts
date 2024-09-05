@@ -12,21 +12,21 @@ const boolSchema = z.preprocess((a) => {
 }, z.boolean());
 
 export class Pharmacy {
-  private medicines: Map<string, number>;
+  private inventory: Map<string, number>;
   private maps: Map<string, string>;
 
   constructor() {
-    this.medicines = new Map();
+    this.inventory = new Map();
     this.maps = new Map();
   }
 
   get(medicine: string) {
-    return this.medicines.get(medicine);
+    return this.inventory.get(medicine);
   }
 
   private add(medicine: string, units: number) {
-    const current = this.medicines.get(medicine) || 0;
-    this.medicines.set(medicine, current + units);
+    const current = this.inventory.get(medicine) || 0;
+    this.inventory.set(medicine, current + units);
   }
 
   process(instructions: Array<string>) {
@@ -39,7 +39,7 @@ export class Pharmacy {
         const { medicine, units } = instruction;
         this.add(medicine, units);
         messages.push(
-          `Add ${units} to ${medicine}, quantity now ${this.medicines.get(medicine)}.`,
+          `Add ${units} to ${medicine}, quantity now ${this.inventory.get(medicine)}.`,
         );
       }
 
@@ -49,19 +49,19 @@ export class Pharmacy {
         for (const fill of fills) {
           if (fill.medicine) {
             const { medicine, units, isGenericAcceptable } = fill;
-            const current = this.medicines.get(medicine) || 0;
+            const current = this.inventory.get(medicine) || 0;
 
             if (current < units) {
               if (isGenericAcceptable) {
                 const generic = this.maps.get(medicine);
                 if (generic) {
-                  const currentGeneric = this.medicines.get(generic) || 0;
+                  const currentGeneric = this.inventory.get(generic) || 0;
                   if (currentGeneric < units) {
                     messages.push(
                       `Cannot fill for ${name}: Not enough units to satisfy request.`,
                     );
                   } else {
-                    this.medicines.set(generic, currentGeneric - units);
+                    this.inventory.set(generic, currentGeneric - units);
                     messages.push(
                       `Can Fill for ${name}: ${units} of ${generic}.`,
                     );
@@ -73,7 +73,7 @@ export class Pharmacy {
                 );
               }
             } else {
-              this.medicines.set(medicine, current - units);
+              this.inventory.set(medicine, current - units);
               messages.push(`Can Fill for ${name}: ${units} of ${medicine}.`);
             }
           }
