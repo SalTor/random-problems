@@ -5,11 +5,19 @@ const unitsSchema = z.preprocess(
   z.number().positive(),
 );
 
+const boolSchema = z.preprocess((a) => {
+  if (a === "F") return false;
+  if (a === "T") return true;
+  return null;
+}, z.boolean());
+
 export class MedicineInventory {
   private medicines: Map<string, number>;
+  private maps: Map<string, string>;
 
   constructor() {
     this.medicines = new Map();
+    this.maps = new Map();
   }
 
   get(medicine: string) {
@@ -19,19 +27,6 @@ export class MedicineInventory {
   private add(medicine: string, units: number) {
     const current = this.medicines.get(medicine) || 0;
     this.medicines.set(medicine, current + units);
-  }
-
-  private fill(medicine: string, units: number) {
-    const current = this.medicines.get(medicine) || 0;
-
-    if (current < units) {
-      return {
-        status: "error",
-        message: "Not enough units to satisfy request.",
-      };
-    }
-
-    this.medicines.set(medicine, current - units);
   }
 
   process(instructions: Array<string>) {
@@ -45,23 +40,49 @@ export class MedicineInventory {
       }
 
       if (instruction.action === "fill") {
-        for (const fill of instruction.fills) {
-          if (fill.status) {
-            messages.push(
-              `Can't fill for ${instruction.name}: ${fill.message}`,
-            );
-            continue;
-          }
+        const { name, fills } = instruction;
 
-          if (fill.medicine) {
-            const response = this.fill(fill.medicine, fill.units);
-            if (response?.status) {
-              messages.push(
-                `Can't fill for ${instruction.name}: ${response.message}`,
-              );
+        for (const fill of fills) {
+          if (fill.status) {
+            messages.push(`Cannot fill for ${name}: ${fill.message}`);
+          } else if (fill.medicine) {
+            const { medicine, units, isGenericAcceptable } = fill;
+            const current = this.medicines.get(medicine) || 0;
+
+            if (current < units) {
+              if (isGenericAcceptable) {
+                const generic = this.maps.get(medicine);
+                if (generic) {
+                  const currentGeneric = this.medicines.get(generic) || 0;
+                  if (currentGeneric < units) {
+                    messages.push(
+                      `Cannot fill for ${name}: Not enough units to satisfy request.`,
+                    );
+                  } else {
+                    this.medicines.set(generic, currentGeneric - units);
+                    messages.push(
+                      `Can Fill for ${name}: ${units} of ${generic}.`,
+                    );
+                  }
+                }
+              } else {
+                messages.push(
+                  `Cannot fill for ${name}: Not enough units to satisfy request.`,
+                );
+              }
+            } else {
+              this.medicines.set(medicine, current - units);
+              messages.push(`Can Fill for ${name}: ${units} of ${medicine}.`);
             }
           }
         }
+      }
+
+      if (instruction.action === "map") {
+        const { from, to } = instruction;
+        this.maps.set(from, to);
+        this.maps.set(to, from);
+        messages.push(`Mapping ${from} to ${to}`);
       }
     }
 
@@ -69,7 +90,7 @@ export class MedicineInventory {
   }
 }
 
-function parseInstruction(instruction: string) {
+export function parseInstruction(instruction: string) {
   const actionIndex = instruction.indexOf("|");
   const action = instruction.slice(0, actionIndex);
   const details = instruction.slice(actionIndex + 1);
@@ -85,7 +106,7 @@ function parseInstruction(instruction: string) {
         units: units.data,
       };
     }
-    return { status: "error", message: units.error.toString() };
+    return { status: "error", message: units.error.message };
   }
 
   if (action === "Fill") {
@@ -93,14 +114,39 @@ function parseInstruction(instruction: string) {
     const medsIndex = details.slice(nameIndex + 1).indexOf("|");
     const [name, _fills] = details.slice(medsIndex + 1).split("|");
     const fills = _fills.split("|").map((fill) => {
-      const [medicine, _units] = fill.split(",");
+      const [medicine, _units, _generic] = fill.split(",");
+
       const units = unitsSchema.safeParse(_units);
-      if (units.success) {
-        return { medicine, units: units.data };
+
+      const isGenericAcceptable = boolSchema.safeParse(_generic);
+
+      if (!units.success) {
+        return { status: "error" as const, message: units.error.message };
       }
-      return { status: "error" as const, message: units.error.toString() };
+
+      if (!isGenericAcceptable.success) {
+        return {
+          status: "error" as const,
+          message: isGenericAcceptable.error.message,
+        };
+      }
+
+      return {
+        medicine,
+        units: units.data,
+        isGenericAcceptable: isGenericAcceptable.data,
+      };
     });
     return { action: "fill" as const, name, fills };
+  }
+
+  if (action === "Map") {
+    const [med1, med2] = details.split("|");
+    return {
+      action: "map" as const,
+      from: med1,
+      to: med2,
+    };
   }
 
   return { status: "error", message: "Unsupported instruction." };
