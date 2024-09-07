@@ -142,22 +142,45 @@ describe("Instruction: Fill", () => {
     );
   });
 
-  test("A bad fill followed by a good fill, the good fill works", () => {
-    expect(pharmacy.get("Pepsid")).toBe(100);
+  describe("A bad fill followed by a good one", () => {
+    test("One person's fill could not be met but another's could", () => {
+      expect(pharmacy.get("Pepsid")).toBe(100);
 
-    pharmacy.process(["Fill|Sal|Pepsid,101,F", "Fill|Winnie|Pepsid,100,F"]);
+      pharmacy.process(["Fill|Sal|Pepsid,101,F", "Fill|Winnie|Pepsid,100,F"]);
 
-    expect(logger).toHaveBeenNthCalledWith(
-      3,
-      "Cannot fill for Sal, insufficient inventory.",
-    );
+      expect(logger).toHaveBeenNthCalledWith(
+        3,
+        "Cannot fill for Sal, insufficient inventory.",
+      );
 
-    expect(logger).toHaveBeenNthCalledWith(
-      4,
-      "Can Fill for Winnie: 100 of Pepsid.",
-    );
+      expect(logger).toHaveBeenNthCalledWith(
+        4,
+        "Can Fill for Winnie: 100 of Pepsid.",
+      );
 
-    expect(pharmacy.get("Pepsid")).toBe(0);
+      expect(pharmacy.get("Pepsid")).toBe(0);
+    });
+
+    test("There was not enough inventory but then more was added", () => {
+      pharmacy.process([
+        "Fill|Sal|Pepsid,100,T|Ativan,200,T",
+        "Add|Ativan|100",
+        "Fill|Sal|Pepsid,100,T|Ativan,200,T",
+      ]);
+
+      expect(logger).toHaveBeenNthCalledWith(
+        3,
+        "Cannot fill for Sal, insufficient inventory.",
+      );
+      expect(logger).toHaveBeenNthCalledWith(
+        4,
+        "Add 100 to Ativan, quantity now 200.",
+      );
+      expect(logger).toHaveBeenNthCalledWith(
+        5,
+        "Can Fill for Sal: 100 of Pepsid. 200 of Ativan.",
+      );
+    });
   });
 
   test("A fill only works if all parts of it are able to be fulfilled", () => {
