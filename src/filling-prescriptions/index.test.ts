@@ -23,25 +23,47 @@ describe("Parsing instructions", () => {
     });
   });
 
-  test("Fill|Sal|Pepsid,100,T", () => {
-    expect(parseInstruction("Fill|Sal|Pepsid,100,T")).toStrictEqual({
-      action: "fill",
-      name: "Sal",
-      fills: [
-        {
-          medicine: "Pepsid",
-          units: 100,
-          isGenericAcceptable: true,
-        },
-      ],
-    });
-  });
-
   test("Map|Pepsid|Ativan", () => {
     expect(parseInstruction("Map|Pepsid|Ativan")).toStrictEqual({
       action: "map",
       from: "Pepsid",
       to: "Ativan",
+    });
+  });
+
+  describe("Parsing Fill", () => {
+    test("Single Fill", () => {
+      expect(parseInstruction("Fill|Sal|Pepsid,100,T")).toStrictEqual({
+        action: "fill",
+        name: "Sal",
+        fills: [
+          {
+            medicine: "Pepsid",
+            units: 100,
+            isGenericAcceptable: true,
+          },
+        ],
+      });
+    });
+    test("Double Fill", () => {
+      expect(
+        parseInstruction("Fill|Sal|Pepsid,50,F|Pepsid,51,F"),
+      ).toStrictEqual({
+        action: "fill",
+        name: "Sal",
+        fills: [
+          {
+            medicine: "Pepsid",
+            units: 50,
+            isGenericAcceptable: false,
+          },
+          {
+            medicine: "Pepsid",
+            units: 51,
+            isGenericAcceptable: false,
+          },
+        ],
+      });
     });
   });
 });
@@ -127,11 +149,31 @@ describe("Instruction: Fill", () => {
       2,
       "Cannot fill for Sal: Not enough units to satisfy request.",
     );
+
     expect(logger).toHaveBeenNthCalledWith(
       3,
       "Can Fill for Winnie: 100 of Pepsid.",
     );
+
     expect(pharmacy.get("Pepsid")).toBe(0);
+  });
+
+  test("A fill only works if all parts of it are able to be fulfilled.", () => {
+    pharmacy.process(["Fill|Sal|Pepsid,50,F|Pepsid,51,F"]);
+
+    expect(pharmacy.get("Pepsid")).toBe(100);
+
+    expect(logger).toHaveBeenNthCalledWith(
+      2,
+      "Can Fill for Sal: 50 of Pepsid.",
+    );
+
+    expect(logger).toHaveBeenNthCalledWith(
+      3,
+      "Cannot fill for Sal: Not enough units to satisfy request.",
+    );
+
+    expect(pharmacy.get("Pepsid")).toBe(100);
   });
 });
 

@@ -16,19 +16,19 @@ type Logger = (...data: any[]) => void;
 export class Pharmacy {
   private inventory: Map<string, number>;
   private maps: Map<string, string>;
-  private logger: Logger;
+  private log: Logger;
 
-  constructor(logger: Logger = console.debug) {
+  constructor(log: Logger = console.debug) {
     this.inventory = new Map();
     this.maps = new Map();
-    this.logger = logger;
+    this.log = log;
   }
 
   process(instructions: Array<string>) {
     const instr = instructions.map(parseInstruction).filter((i) => i !== null);
 
     if (instr.length === 0) {
-      this.logger("Parsed messages and left with non valid instructions.");
+      this.log("Parsed messages and left with non valid instructions.");
     }
 
     for (const instruction of instr) {
@@ -46,7 +46,7 @@ export class Pharmacy {
     const { medicine, units } = instruction;
     const current = this.inventory.get(medicine) || 0;
     this.inventory.set(medicine, current + units);
-    this.logger(
+    this.log(
       `Add ${units} to ${medicine}, quantity now ${this.inventory.get(medicine)}.`,
     );
   }
@@ -54,38 +54,51 @@ export class Pharmacy {
   private map(instruction: MapInstruction) {
     const { from, to } = instruction;
     this.maps.set(from, to);
-    this.logger(`Mapping ${from} to ${to}`);
+    this.log(`Mapping ${from} to ${to}`);
   }
 
   private fill(instruction: FillInstruction) {
     const { name, fills } = instruction;
 
+    const pendingDeductions = new Map<string, number>();
+
+    let fillableFills = 0;
     for (const fill of fills) {
       const { medicine, units, isGenericAcceptable } = fill;
-      const current = this.inventory.get(medicine) || 0;
 
-      if (current < units) {
-        if (isGenericAcceptable) {
-          const generic = this.maps.get(medicine);
-          if (generic) {
-            const currentGeneric = this.inventory.get(generic) || 0;
-            if (currentGeneric < units) {
-              this.logger(
-                `Cannot fill for ${name}: Not enough units to satisfy request.`,
-              );
-            } else {
-              this.inventory.set(generic, currentGeneric - units);
-              this.logger(`Can Fill for ${name}: ${units} of ${generic}.`);
-            }
+      const currentAmount = this.inventory.get(medicine) || 0;
+      const pendingAmount = pendingDeductions.get(medicine) || 0;
+
+      if (currentAmount - pendingAmount >= units) {
+        this.log(`Can Fill for ${name}: ${units} of ${medicine}.`);
+        fillableFills++;
+        pendingDeductions.set(medicine, pendingAmount + units);
+      } else {
+        const generic = this.maps.get(medicine);
+
+        if (isGenericAcceptable && generic) {
+          const currentAmount = this.inventory.get(generic) || 0;
+          const pendingAmount = pendingDeductions.get(medicine) || 0;
+
+          if (currentAmount - pendingAmount >= units) {
+            this.log(`Can Fill for ${name}: ${units} of ${generic}.`);
+            fillableFills++;
+            pendingDeductions.set(generic, pendingAmount + units);
+          } else {
+            this.log(
+              "Cannot fill for Sal: Not enough units to satisfy request.",
+            );
           }
         } else {
-          this.logger(
-            `Cannot fill for ${name}: Not enough units to satisfy request.`,
-          );
+          this.log("Cannot fill for Sal: Not enough units to satisfy request.");
         }
-      } else {
+      }
+    }
+
+    if (fillableFills === fills.length) {
+      for (const [medicine, units] of pendingDeductions.entries()) {
+        const current = this.inventory.get(medicine) || 0;
         this.inventory.set(medicine, current - units);
-        this.logger(`Can Fill for ${name}: ${units} of ${medicine}.`);
       }
     }
   }
@@ -140,10 +153,10 @@ export function parseInstruction(instruction: string): null | Instructions {
 
   if (action === "Fill") {
     const nameIndex = details.indexOf("|");
-    const medsIndex = details.slice(nameIndex + 1).indexOf("|");
-    const [name, _fills] = details.slice(medsIndex + 1).split("|");
+    const medsIndex = details.slice(nameIndex).indexOf("|");
+    const [name, ..._fills] = details.slice(medsIndex).split("|");
 
-    const fills = _fills.split("|").map((fill) => {
+    const fills = _fills.map((fill) => {
       const [medicine, _units, _generic] = fill.split(",");
 
       const units = unitsSchema.safeParse(_units);
