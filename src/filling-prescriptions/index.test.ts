@@ -120,14 +120,14 @@ describe("Instruction: Fill", () => {
   let pharmacy: Pharmacy;
   beforeEach(() => {
     pharmacy = new Pharmacy(logger);
-    pharmacy.process(["Add|Pepsid|100"]);
+    pharmacy.process(["Add|Pepsid|100", "Add|Ativan|100"]);
   });
 
   test("Filling for 100 Pepsid works", () => {
     pharmacy.process(["Fill|Sal|Pepsid,100,F"]);
 
     expect(logger).toHaveBeenNthCalledWith(
-      2,
+      3,
       "Can Fill for Sal: 100 of Pepsid.",
     );
     expect(pharmacy.get("Pepsid")).toBe(0);
@@ -137,43 +137,70 @@ describe("Instruction: Fill", () => {
     pharmacy.process(["Fill|Sal|Pepsid,101,F"]);
 
     expect(logger).toHaveBeenNthCalledWith(
-      2,
-      "Cannot fill for Sal: Not enough units to satisfy request.",
+      3,
+      "Cannot fill for Sal, insufficient inventory.",
     );
   });
 
   test("A bad fill followed by a good fill, the good fill works", () => {
+    expect(pharmacy.get("Pepsid")).toBe(100);
+
     pharmacy.process(["Fill|Sal|Pepsid,101,F", "Fill|Winnie|Pepsid,100,F"]);
 
     expect(logger).toHaveBeenNthCalledWith(
-      2,
-      "Cannot fill for Sal: Not enough units to satisfy request.",
+      3,
+      "Cannot fill for Sal, insufficient inventory.",
     );
 
     expect(logger).toHaveBeenNthCalledWith(
-      3,
+      4,
       "Can Fill for Winnie: 100 of Pepsid.",
     );
 
     expect(pharmacy.get("Pepsid")).toBe(0);
   });
 
-  test("A fill only works if all parts of it are able to be fulfilled.", () => {
-    pharmacy.process(["Fill|Sal|Pepsid,50,F|Pepsid,51,F"]);
-
+  test("A fill only works if all parts of it are able to be fulfilled", () => {
     expect(pharmacy.get("Pepsid")).toBe(100);
 
-    expect(logger).toHaveBeenNthCalledWith(
-      2,
-      "Can Fill for Sal: 50 of Pepsid.",
-    );
+    pharmacy.process(["Fill|Sal|Pepsid,50,F|Pepsid,51,F"]);
 
     expect(logger).toHaveBeenNthCalledWith(
       3,
-      "Cannot fill for Sal: Not enough units to satisfy request.",
+      "Cannot fill for Sal, insufficient inventory.",
     );
 
     expect(pharmacy.get("Pepsid")).toBe(100);
+  });
+
+  describe("A fill prints all components if it goes through", () => {
+    test("With the same medicine", () => {
+      expect(pharmacy.get("Pepsid")).toBe(100);
+
+      pharmacy.process(["Fill|Sal|Pepsid,50,F|Pepsid,50,F"]);
+
+      expect(logger).toHaveBeenNthCalledWith(
+        3,
+        "Can Fill for Sal: 100 of Pepsid.",
+      );
+
+      expect(pharmacy.get("Pepsid")).toBe(0);
+    });
+
+    test("With different medicines", () => {
+      expect(pharmacy.get("Pepsid")).toBe(100);
+      expect(pharmacy.get("Ativan")).toBe(100);
+
+      pharmacy.process(["Fill|Sal|Pepsid,100,F|Ativan,100,F"]);
+
+      expect(logger).toHaveBeenNthCalledWith(
+        3,
+        "Can Fill for Sal: 100 of Pepsid. 100 of Ativan.",
+      );
+
+      expect(pharmacy.get("Pepsid")).toBe(0);
+      expect(pharmacy.get("Ativan")).toBe(0);
+    });
   });
 });
 
@@ -189,7 +216,7 @@ describe("Instruction: Map", () => {
     pharmacy.process(["Fill|Sal|Pepsid,150,F"]);
     expect(logger).toHaveBeenNthCalledWith(
       4,
-      "Cannot fill for Sal: Not enough units to satisfy request.",
+      "Cannot fill for Sal, insufficient inventory.",
     );
   });
 

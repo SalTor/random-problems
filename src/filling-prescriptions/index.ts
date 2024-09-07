@@ -70,7 +70,6 @@ export class Pharmacy {
       const pendingAmount = pendingDeductions.get(medicine) || 0;
 
       if (currentAmount - pendingAmount >= units) {
-        this.log(`Can Fill for ${name}: ${units} of ${medicine}.`);
         fillableFills++;
         pendingDeductions.set(medicine, pendingAmount + units);
       } else {
@@ -81,25 +80,25 @@ export class Pharmacy {
           const pendingAmount = pendingDeductions.get(medicine) || 0;
 
           if (currentAmount - pendingAmount >= units) {
-            this.log(`Can Fill for ${name}: ${units} of ${generic}.`);
             fillableFills++;
             pendingDeductions.set(generic, pendingAmount + units);
           } else {
-            this.log(
-              "Cannot fill for Sal: Not enough units to satisfy request.",
-            );
+            this.log("Cannot fill for Sal, insufficient inventory.");
           }
         } else {
-          this.log("Cannot fill for Sal: Not enough units to satisfy request.");
+          this.log("Cannot fill for Sal, insufficient inventory.");
         }
       }
     }
 
     if (fillableFills === fills.length) {
+      let filledMeds = [];
       for (const [medicine, units] of pendingDeductions.entries()) {
         const current = this.inventory.get(medicine) || 0;
         this.inventory.set(medicine, current - units);
+        filledMeds.push(`${units} of ${medicine}`);
       }
+      this.log(`Can Fill for ${name}: ${filledMeds.join(". ")}.`);
     }
   }
 }
