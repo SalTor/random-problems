@@ -42,8 +42,7 @@ describe("Values 1->2->3", () => {
       q.dequeue();
       q.dequeue();
       q.dequeue();
-      const emptyDequeue = () => q.dequeue();
-      expect(emptyDequeue()).toThrow();
+      expect(q.dequeue()).toBeUndefined();
     });
   });
 });

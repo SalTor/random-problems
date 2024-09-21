@@ -1,11 +1,16 @@
 export class QueueTwoStacks {
+  values: Array<number>;
+
+  constructor() {
+    this.values = [];
+  }
+
   enqueue(num: number) {
     // TODO: Implement
-    return num;
+    this.values = [num, ...this.values];
   }
 
   dequeue() {
-    // TODO: Implement
-    return null;
+    return this.values.pop();
   }
 }
