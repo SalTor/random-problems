@@ -1,12 +1,10 @@
 import { BinaryTreeNode, getIsBalanced } from ".";
 
-let desc;
 let treeRoot;
 let leftNode;
 let rightNode;
 
 test("Full tree", () => {
-  desc = "full tree";
   treeRoot = new BinaryTreeNode(5);
   leftNode = treeRoot.insertLeft(8);
   leftNode.insertLeft(1);
@@ -18,7 +16,6 @@ test("Full tree", () => {
 });
 
 test("Both leaves at the same depth", () => {
-  desc = "both leaves at the same depth";
   treeRoot = new BinaryTreeNode(3);
   leftNode = treeRoot.insertLeft(4);
   leftNode.insertLeft(1);
@@ -28,7 +25,6 @@ test("Both leaves at the same depth", () => {
 });
 
 test("leaf heights differ by one", () => {
-  desc = "leaf heights differ by one";
   treeRoot = new BinaryTreeNode(6);
   leftNode = treeRoot.insertLeft(1);
   rightNode = treeRoot.insertRight(0);
@@ -37,7 +33,6 @@ test("leaf heights differ by one", () => {
 });
 
 test("leaf heights differ by two", () => {
-  desc = "leaf heights differ by two";
   treeRoot = new BinaryTreeNode(6);
   leftNode = treeRoot.insertLeft(1);
   rightNode = treeRoot.insertRight(0);
@@ -46,7 +41,6 @@ test("leaf heights differ by two", () => {
 });
 
 test("three leaves total", () => {
-  desc = "three leaves total";
   treeRoot = new BinaryTreeNode(1);
   leftNode = treeRoot.insertLeft(5);
   rightNode = treeRoot.insertRight(9);
@@ -56,7 +50,6 @@ test("three leaves total", () => {
 });
 
 test("both subtrees superbalanced", () => {
-  desc = "both subtrees superbalanced";
   treeRoot = new BinaryTreeNode(1);
   leftNode = treeRoot.insertLeft(5);
   rightNode = treeRoot.insertRight(9);
@@ -66,7 +59,6 @@ test("both subtrees superbalanced", () => {
 });
 
 test("both subtrees superbalanced two", () => {
-  desc = "both subtrees superbalanced two";
   treeRoot = new BinaryTreeNode(1);
   leftNode = treeRoot.insertLeft(2);
   leftNode.insertLeft(3);
@@ -76,7 +68,6 @@ test("both subtrees superbalanced two", () => {
 });
 
 test("three leaves at different levels", () => {
-  desc = "three leaves at different levels";
   treeRoot = new BinaryTreeNode(1);
   leftNode = treeRoot.insertLeft(2);
   let leftLeft = leftNode.insertLeft(3);
@@ -88,13 +79,11 @@ test("three leaves at different levels", () => {
 });
 
 test("only one node", () => {
-  desc = "only one node";
   treeRoot = new BinaryTreeNode(1);
   expect(getIsBalanced(treeRoot)).toBe(true);
 });
 
 test("linked list tree", () => {
-  desc = "linked list tree";
   treeRoot = new BinaryTreeNode(1);
   treeRoot.insertRight(2).insertRight(3).insertRight(4);
   expect(getIsBalanced(treeRoot)).toBe(true);
