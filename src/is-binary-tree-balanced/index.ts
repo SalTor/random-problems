@@ -21,5 +21,19 @@ export class BinaryTreeNode {
 }
 
 export function getIsBalanced(node: BinaryTreeNode) {
-  return node;
+  let leftMostDepth = 1;
+  let currentLeft = node.left;
+  while (currentLeft?.left) {
+    leftMostDepth++;
+    currentLeft = currentLeft.left;
+  }
+
+  let rightMostDepth = 1;
+  let currentRight = node.right;
+  while (currentRight?.right) {
+    rightMostDepth++;
+    currentRight = currentRight.right;
+  }
+
+  return Math.abs(rightMostDepth - leftMostDepth) <= 1;
 }
