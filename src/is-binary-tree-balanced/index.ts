@@ -1,22 +1,22 @@
 export class BinaryTreeNode {
   value: number;
-  leftNode: BinaryTreeNode | null;
-  rightNode: BinaryTreeNode | null;
+  left: BinaryTreeNode | null;
+  right: BinaryTreeNode | null;
 
   constructor(num: number) {
     this.value = num;
-    this.leftNode = null;
-    this.rightNode = null;
+    this.left = null;
+    this.right = null;
   }
 
   insertLeft(num: number) {
-    // TODO: implement
-    return new BinaryTreeNode(num);
+    this.left = new BinaryTreeNode(num);
+    return this.left;
   }
 
   insertRight(num: number) {
-    // TODO: implement
-    return new BinaryTreeNode(num);
+    this.right = new BinaryTreeNode(num);
+    return this.right;
   }
 }
 
