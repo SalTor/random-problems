@@ -49,5 +49,45 @@ function getLeafs(
 }
 
 export function getIsBalancedIterative(node: BinaryTreeNode) {
-  node;
+  if (!node) {
+    return true;
+  }
+
+  const depths = new Set<number>();
+
+  const pairsOfNodesAndDepths: Array<[BinaryTreeNode, number]> = [];
+  pairsOfNodesAndDepths.push([node, 0]);
+
+  while (pairsOfNodesAndDepths.length) {
+    const pair = pairsOfNodesAndDepths.pop();
+    if (!pair) return false;
+
+    const [node, depth] = pair;
+
+    if (!node.left && !node.right) {
+      if (!depths.has(depth)) {
+        depths.add(depth);
+
+        if (depths.size > 2) {
+          return false;
+        }
+
+        if (depths.size === 2) {
+          const [depth_a, depth_b] = depths.values();
+          if (Math.abs(depth_a - depth_b) > 1) {
+            return false;
+          }
+        }
+      }
+    } else {
+      if (node.left) {
+        pairsOfNodesAndDepths.push([node.left, depth + 1]);
+      }
+      if (node.right) {
+        pairsOfNodesAndDepths.push([node.right, depth + 1]);
+      }
+    }
+  }
+
+  return true;
 }

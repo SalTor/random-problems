@@ -1,4 +1,8 @@
-import { BinaryTreeNode, getIsBalancedRecursive } from ".";
+import {
+  BinaryTreeNode,
+  getIsBalancedIterative,
+  getIsBalancedRecursive,
+} from ".";
 
 let treeRoot;
 let leftNode;
@@ -13,6 +17,7 @@ test("Full tree", () => {
   rightNode.insertLeft(3);
   rightNode.insertRight(4);
   expect(getIsBalancedRecursive(treeRoot)).toBe(true);
+  expect(getIsBalancedIterative(treeRoot)).toBe(true);
 });
 
 test("Both leaves at the same depth", () => {
@@ -22,6 +27,7 @@ test("Both leaves at the same depth", () => {
   rightNode = treeRoot.insertRight(6);
   rightNode.insertRight(9);
   expect(getIsBalancedRecursive(treeRoot)).toBe(true);
+  expect(getIsBalancedIterative(treeRoot)).toBe(true);
 });
 
 test("leaf heights differ by one", () => {
@@ -30,6 +36,7 @@ test("leaf heights differ by one", () => {
   rightNode = treeRoot.insertRight(0);
   rightNode.insertRight(7);
   expect(getIsBalancedRecursive(treeRoot)).toBe(true);
+  expect(getIsBalancedIterative(treeRoot)).toBe(true);
 });
 
 test("leaf heights differ by two", () => {
@@ -38,6 +45,7 @@ test("leaf heights differ by two", () => {
   rightNode = treeRoot.insertRight(0);
   rightNode.insertRight(7).insertRight(8);
   expect(getIsBalancedRecursive(treeRoot)).toBe(false);
+  expect(getIsBalancedIterative(treeRoot)).toBe(false);
 });
 
 test("three leaves total", () => {
@@ -47,6 +55,7 @@ test("three leaves total", () => {
   rightNode.insertLeft(8);
   rightNode.insertRight(5);
   expect(getIsBalancedRecursive(treeRoot)).toBe(true);
+  expect(getIsBalancedIterative(treeRoot)).toBe(true);
 });
 
 test("both subtrees superbalanced", () => {
@@ -56,6 +65,7 @@ test("both subtrees superbalanced", () => {
   rightNode.insertLeft(8).insertLeft(7);
   rightNode.insertRight(5);
   expect(getIsBalancedRecursive(treeRoot)).toBe(false);
+  expect(getIsBalancedIterative(treeRoot)).toBe(false);
 });
 
 test("both subtrees superbalanced two", () => {
@@ -65,6 +75,7 @@ test("both subtrees superbalanced two", () => {
   leftNode.insertRight(7).insertRight(8);
   treeRoot.insertRight(4).insertRight(5).insertRight(6).insertRight(9);
   expect(getIsBalancedRecursive(treeRoot)).toBe(false);
+  expect(getIsBalancedIterative(treeRoot)).toBe(false);
 });
 
 test("three leaves at different levels", () => {
@@ -76,15 +87,18 @@ test("three leaves at different levels", () => {
   leftLeft.insertRight(6);
   treeRoot.insertRight(7).insertRight(8).insertRight(9).insertRight(10);
   expect(getIsBalancedRecursive(treeRoot)).toBe(false);
+  expect(getIsBalancedIterative(treeRoot)).toBe(false);
 });
 
 test("only one node", () => {
   treeRoot = new BinaryTreeNode(1);
   expect(getIsBalancedRecursive(treeRoot)).toBe(true);
+  expect(getIsBalancedIterative(treeRoot)).toBe(true);
 });
 
 test("linked list tree", () => {
   treeRoot = new BinaryTreeNode(1);
   treeRoot.insertRight(2).insertRight(3).insertRight(4);
   expect(getIsBalancedRecursive(treeRoot)).toBe(true);
+  expect(getIsBalancedIterative(treeRoot)).toBe(true);
 });
