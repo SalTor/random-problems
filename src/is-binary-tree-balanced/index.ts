@@ -21,19 +21,29 @@ export class BinaryTreeNode {
 }
 
 export function getIsBalanced(node: BinaryTreeNode) {
-  let leftMostDepth = 1;
-  let currentLeft = node.left;
-  while (currentLeft?.left) {
-    leftMostDepth++;
-    currentLeft = currentLeft.left;
+  const leafs = getLeafs(node, 0, []);
+  const min = Math.min(...leafs);
+  const max = Math.max(...leafs);
+  return Math.abs(max - min) <= 1;
+}
+
+function getLeafs(
+  node: BinaryTreeNode,
+  depth: number,
+  leafs: Array<number>,
+): Array<number> {
+  if (node.left === null && node.right === null) {
+    return [depth, ...leafs];
   }
 
-  let rightMostDepth = 1;
-  let currentRight = node.right;
-  while (currentRight?.right) {
-    rightMostDepth++;
-    currentRight = currentRight.right;
+  let left: Array<number> = leafs;
+  if (node.left) {
+    left = getLeafs(node.left, depth + 1, leafs);
+  }
+  let right: Array<number> = leafs;
+  if (node.right) {
+    right = getLeafs(node.right, depth + 1, leafs);
   }
 
-  return Math.abs(rightMostDepth - leftMostDepth) <= 1;
+  return [...left, ...right];
 }
