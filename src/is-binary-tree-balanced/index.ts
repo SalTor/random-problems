@@ -20,11 +20,7 @@ export class BinaryTreeNode {
   }
 }
 
-export function getIsBalanced(node: BinaryTreeNode) {
-  return recursiveSolution(node);
-}
-
-function recursiveSolution(node: BinaryTreeNode) {
+export function getIsBalancedRecursive(node: BinaryTreeNode) {
   const leafs = getLeafs(node, 0, []);
   const min = Math.min(...leafs);
   const max = Math.max(...leafs);
@@ -50,4 +46,8 @@ function getLeafs(
   }
 
   return [...left, ...right];
+}
+
+export function getIsBalancedIterative(node: BinaryTreeNode) {
+  node;
 }
